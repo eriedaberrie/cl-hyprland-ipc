@@ -1,0 +1,5 @@
+# Nix stuff
+result*
+
+# Build artifacts
+*.fasl
