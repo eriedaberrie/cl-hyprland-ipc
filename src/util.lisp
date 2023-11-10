@@ -12,8 +12,8 @@
 (uiop:register-image-restore-hook #'init-socket-locations
                                   (not (and *hyprctl-socket* *events-socket*)))
 
-(defmacro with-local-socket ((socket address type) &body body)
-  `(let ((,socket (make-instance 'sb-bsd-sockets:local-socket :type ,type)))
+(defmacro with-local-stream-socket ((socket address) &body body)
+  `(let ((,socket (make-instance 'sb-bsd-sockets:local-socket :type :stream)))
      (sb-bsd-sockets:socket-connect ,socket ,address)
      (unwind-protect
           (progn ,@body)

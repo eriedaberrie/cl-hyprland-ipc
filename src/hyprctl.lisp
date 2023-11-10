@@ -1,40 +1,33 @@
 (in-package #:hyprland-ipc)
 
-(defun %hyprctl (request response)
-  (with-local-socket (hyprctl-socket *hyprctl-socket* :stream)
+(defun %hyprctl (request)
+  (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
     (sb-bsd-sockets:socket-send hyprctl-socket request NIL)
-    (when response
-      (babel:octets-to-string
-       (let ((full-buffer (make-array 0
-                                      :element-type '(unsigned-byte 8)
-                                      :fill-pointer 0
-                                      :adjustable T)))
-         (loop :while (let* ((response-buffer
-                               (make-array 8192
-                                           :element-type '(unsigned-byte 8)))
-                             (response-length
-                               (nth-value 1
-                                          (sb-bsd-sockets:socket-receive hyprctl-socket
-                                                                         response-buffer
-                                                                         NIL))))
-                        (loop :for i :from 0 :below response-length
-                              :do (vector-push-extend (aref response-buffer i)
-                                                      full-buffer
-                                                      response-length))
-                        (= response-length (length response-buffer))))
-         full-buffer)))))
+    (babel:octets-to-string
+     (let ((full-buffer (make-array 0
+                                    :element-type '(unsigned-byte 8)
+                                    :fill-pointer 0
+                                    :adjustable T))
+           (response-buffer (make-array 8192 :element-type '(unsigned-byte 8))))
+       (loop :for response-length := (nth-value 1
+                                                (sb-bsd-sockets:socket-receive
+                                                 hyprctl-socket
+                                                 response-buffer
+                                                 NIL))
+             :do (dotimes (i response-length)
+                   (vector-push-extend (aref response-buffer i)
+                                       full-buffer
+                                       response-length))
+             :while (= response-length (length response-buffer)))
+       full-buffer))))
 
-(defun hyprctl (request &optional response &aux (json (eq response :json)))
-  "Send REQUEST to hyprctl.
-
-Return the response string if RESPONSE is non-NIL. If it is :JSON, instead return the parsed JSON."
+(defun hyprctl (request &optional json)
+  "Send REQUEST to hyprctl and return the response, or the parsed object if JSON is non-NIL."
   (funcall (if json #'com.inuoe.jzon:parse #'identity)
-           (%hyprctl (concatenate 'string (if json "j/" "/") request)
-                     (and response T))))
+           (%hyprctl (concatenate 'string (if json "j/" "/") request))))
 
-(defun hyprctl-batch (requests &optional response)
+(defun hyprctl-batch (requests)
   "Pass every request in REQUESTS to hyrpctl in a batch, which is more efficient than if done individually.
 
-Return the response string when RESPONSE is non-NIL, which is probably garbage."
-  (%hyprctl (format NIL "[[BATCH]]~{~A~^;~}" (alexandria:ensure-list requests))
-            response))
+Return the response, which is probably not very useful."
+  (%hyprctl (format NIL "[[BATCH]]~{~A~^;~}" (alexandria:ensure-list requests))))
