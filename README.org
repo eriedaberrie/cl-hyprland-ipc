@@ -1,0 +1,97 @@
+#+TITLE: cl-hyprland-ipc
+
+A simple wrapper for interacting with Hyprland's IPC using Common Lisp.
+
+* Examples
+
+** Notify the user
+
+#+BEGIN_SRC lisp
+;; Porcelain will be added in the future so you don't have to use a raw string
+(hyprland-ipc:hyprctl "notify 0 10000 rgb(abcdef) Hi mom!") ; -> "ok"
+#+END_SRC lisp
+
+** Get the title of the active window
+
+#+BEGIN_SRC lisp
+(gethash "title" (hyprland-ipc:hyprctl "activewindow" T))   ; -> "*sly-mrepl for sbcl*"
+#+END_SRC lisp
+
+** Do a bunch of stuff at once
+
+#+BEGIN_SRC lisp
+(hyprland-ipc:hyprctl-batch '("dispatch workspace 1"
+                              "dispatch killactive"
+                              "dispatch exec kitty"
+                              "dispatch movecursor 100 10"))
+#+END_SRC lisp
+
+** Event shenanigans
+
+Note the singular ~:active-window~ handler with three arguments that handles both
+the ~activewindow~ and ~activewindowv2~ events.
+
+#+BEGIN_SRC lisp
+(hyprland-ipc:handle-events :open-layer (lambda (namespace)
+                                          (declare (ignorable namespace))
+                                          (hyprland-ipc:hyprctl "dispatch exec kitty"))
+                            :change-floating-mode (lambda (window-address floating)
+                                                    (declare (ignorable window-address floating))
+                                                    (let ((float-status (if (string= floating "1")
+                                                                            "Floating"
+                                                                            "Not Floating")))
+                                                      (format T
+                                                              "Your ~A is: damn ~A.~%"
+                                                              (gethash "class"
+                                                                       (find-if (lambda (e)
+                                                                                  (string=
+                                                                                   (gethash
+                                                                                    "address"
+                                                                                    e)
+                                                                                   (concatenate
+                                                                                    'string
+                                                                                    "0x"
+                                                                                    window-address)))
+                                                                                (hyprland-ipc:hyprctl
+                                                                                 "clients"
+                                                                                 T)))
+                                                              float-status)))
+                            :active-window (lambda (window-class window-title window-address)
+                                             (declare (ignorable window-class window-title window-address))
+                                             (format T
+                                                     "Window with title \"~A\" just focused at 0x~A.~%"
+                                                     window-title
+                                                     window-address)))
+#+END_SRC lisp
+
+* Installation
+
+#+BEGIN_QUOTE
+Currently, the only supported Common Lisp implementation is SBCL (if anyone
+finds an alternative to ~sb-bsd-sockets~ that doesn't suck feel free to make a
+PR).
+#+END_QUOTE
+
+This system is available on [[https://ultralisp.org][Ultralisp]].  With [[https://www.quicklisp.org/beta/][Quicklisp]] installed, run:
+
+#+BEGIN_SRC lisp
+(ql-dist:install-dist "http://dist.ultralisp.org/" :prompt NIL)
+(ql:quickload "cl-hyprland-ipc")
+#+END_SRC lisp
+
+** Nix
+
+The primary way to use this repository's Nix flake is the overlay.  In any flake
+where you might want to use it:
+
+#+BEGIN_SRC nix
+inputs.cl-hyprland-ipc.url = "github:eriedaberrie/cl-hyprland-ipc";
+#+END_SRC nix
+
+Next, make sure to apply ~inputs.cl-hyprland-ipc.overlays.default~ to ~nixpkgs~,
+either by adding it to the ~nixpkgs.overlays~ option in a NixOS configuration, or
+adding it to the ~overlays~ attribute when importing ~nixpkgs~ in a regular flake.
+This makes ~cl-hyprland-ipc~ accessible in ~pkgs.sbcl.pkgs~, as an argument to
+~pkgs.sbcl.withPackages~ and the ~lispLibs~ attribute of ~pkgs.sbcl.buildASDFSystem~,
+etc.  [[https://nixos.org/manual/nixpkgs/stable/#lisp][The Nixpkgs manual on Common Lisp in Nix.]]
+
