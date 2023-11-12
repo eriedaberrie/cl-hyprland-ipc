@@ -21,10 +21,10 @@
              :while (= response-length (length response-buffer)))
        full-buffer))))
 
-(defun hyprctl (request &optional json)
-  "Send REQUEST to hyprctl and return the response, or the parsed object if JSON is non-NIL."
-  (funcall (if json #'com.inuoe.jzon:parse #'identity)
-           (%hyprctl (concatenate 'string (if json "j/" "/") request))))
+(defun hyprctl (request &optional jsonp)
+  "Send REQUEST to hyprctl and return the response, or the parsed object if JSONP is non-NIL."
+  (funcall (if jsonp #'com.inuoe.jzon:parse #'identity)
+           (%hyprctl (concatenate 'string (if jsonp "j/" "/") request))))
 
 (defun hyprctl-batch (requests)
   "Pass every request in REQUESTS to hyrpctl in a batch, which is more efficient than if done individually.

@@ -22,7 +22,7 @@
           pname = "cl-hyprland-ipc";
           version = "0.1.0";
           src = lib.cleanSource ./.;
-          lispLibs = with prev'; [babel jzon];
+          lispLibs = with prev'; [babel jzon split-sequence];
         };
       });
     };
