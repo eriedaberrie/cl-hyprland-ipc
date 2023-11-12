@@ -59,7 +59,7 @@ Return whether or not LINE started with PREFIX, and also the result of HANDLER i
                        (nconc sequences (list (subseq data-string index)))))))))
 
 (defun handle-events (&rest handlers)
-  "Listen to for events from Hyprland, and apply the arguments of the events to the HANDLER with the matching KEY in HANDLERS."
+  "Listen for events from Hyprland, and apply the arguments of the events to the HANDLER with the matching KEY in HANDLERS."
   (let* (active-window-data
          (handler-table (loop :for (key handler) :on handlers :by #'cddr
                               :when (eq key :active-window)
