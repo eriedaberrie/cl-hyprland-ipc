@@ -30,4 +30,4 @@
   "Pass every request in REQUESTS to hyrpctl in a batch, which is more efficient than if done individually.
 
 Return the response, which is probably not very useful."
-  (%hyprctl (format NIL "[[BATCH]]~{~A~^;~}" (alexandria:ensure-list requests))))
+  (%hyprctl (format NIL "[[BATCH]]~{~A~^;~}" (ensure-list requests))))
