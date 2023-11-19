@@ -44,18 +44,17 @@ HANDLER should have a single argument, which is the line that was received from 
   "If LINE starts with PREFIX, split the remainder of the line into ARGC strings with commas and apply them to HANDLER.
 
 Return whether or not LINE started with PREFIX, and also the result of HANDLER if it was called."
-  (multiple-value-bind (matchp data-string)
-      (alexandria:starts-with-subseq prefix
-                                     line
-                                     :return-suffix T)
-    (when matchp
-      (multiple-value-bind (sequences index)
-          (split-sequence:split-sequence #\,
-                                         data-string
-                                         :count (- argc 1))
-        (values T
-                (apply handler
-                       (nconc sequences (list (subseq data-string index)))))))))
+  (when-let (data-string (nth-value 1
+                                    (starts-with-subseq prefix
+                                                        line
+                                                        :return-suffix T)))
+    (multiple-value-bind (sequences index)
+        (split-sequence:split-sequence #\,
+                                       data-string
+                                       :count (- argc 1))
+      (values T
+              (apply handler
+                     (nconc sequences (list (subseq data-string index))))))))
 
 (defun handle-events (&rest handlers)
   "Listen for events from Hyprland, and apply the arguments of the events to the HANDLER with the matching KEY in HANDLERS."
