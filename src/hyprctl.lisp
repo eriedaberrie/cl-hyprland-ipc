@@ -1,5 +1,10 @@
 (in-package #:hyprland-ipc)
 
+(defun ensure-trimmed-hex-address (address)
+  "Remove the prefixed \"0x\" from ADDRESS if it exists."
+  (or (nth-value 1 (starts-with-subseq "0x" address :return-suffix T))
+      address))
+
 (defun %hyprctl (request)
   (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
     (sb-bsd-sockets:socket-send hyprctl-socket request NIL)
@@ -31,3 +36,12 @@
 
 Return the response, which is probably not very useful."
   (%hyprctl (format NIL "[[BATCH]]~{~A~^;~}" (ensure-list requests))))
+
+(defun get-client-data (address &optional clients-data)
+  "Return the data of the client at ADDRESS.
+
+CLIENTS-DATA should be the parsed JSON from a call to \"hyprctl clients\" if provided. If not, it will be fetched automatically."
+  (find-if (lambda (client)
+             (string= (ensure-trimmed-hex-address address)
+                      (ensure-trimmed-hex-address (gethash "address" client))))
+           (or clients-data (hyprctl "clients" t))))

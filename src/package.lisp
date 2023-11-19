@@ -8,6 +8,7 @@
    ;; Hyprctl
    #:hyprctl
    #:hyprctl-batch
+   #:get-client-data
 
    ;; Events
    #:*events-spec*

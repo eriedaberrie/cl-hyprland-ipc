@@ -37,25 +37,13 @@ the ~activewindow~ and ~activewindowv2~ events.
                                           (hyprland-ipc:hyprctl "dispatch exec kitty"))
                             :change-floating-mode (lambda (window-address floating)
                                                     (declare (ignorable window-address floating))
-                                                    (let ((float-status (if (string= floating "1")
-                                                                            "Floating"
-                                                                            "Not Floating")))
-                                                      (format T
-                                                              "Your ~A is: damn ~A.~%"
-                                                              (gethash "class"
-                                                                       (find-if (lambda (e)
-                                                                                  (string=
-                                                                                   (gethash
-                                                                                    "address"
-                                                                                    e)
-                                                                                   (concatenate
-                                                                                    'string
-                                                                                    "0x"
-                                                                                    window-address)))
-                                                                                (hyprland-ipc:hyprctl
-                                                                                 "clients"
-                                                                                 T)))
-                                                              float-status)))
+                                                    (format T
+                                                            "Your ~A is: damn ~A.~%"
+                                                            (gethash "class"
+                                                                     (hyprland-ipc:get-client-data window-address))
+                                                            (if (string= floating "1")
+                                                                "Floating"
+                                                                "Not Floating")))
                             :active-window (lambda (window-class window-title window-address)
                                              (declare (ignorable window-class window-title window-address))
                                              (format T
