@@ -1,5 +1,5 @@
 (uiop:define-package #:hyprland-ipc
-  (:use #:cl)
+  (:use #:cl #:alexandria)
   (:export
 
    #:*hyprctl-socket*
