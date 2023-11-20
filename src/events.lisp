@@ -29,16 +29,18 @@
 
 In order: identifier for use in HANDLE-EVENTS, string prefix received from the socket, and argument count.")
 
-(defun handle-events-raw (handler)
+(defun handle-events-raw (handler &key return-on-non-nil-p)
   "Listen to Hyprland events, calling HANDLER every time a new event happens.
 
-HANDLER should have a single argument, which is the line that was received from the socket."
+HANDLER should have a single argument, which is the line that was received from the socket. If RETURN-ON-NON-NIL-P is non-NIL, stop at and return the first non-NIL result."
   (with-local-stream-socket (events-socket *events-socket*)
-    (let ((events-stream (sb-bsd-sockets:socket-make-stream events-socket
-                                                            :input T)))
-      (loop :for line := (read-line events-stream)
-            :while line
-            :do (funcall handler line)))))
+    (loop :with events-stream := (sb-bsd-sockets:socket-make-stream events-socket
+                                                                    :input T)
+          :for line := (read-line events-stream)
+          :while line
+          :for value := (funcall handler line)
+          :when (and return-on-non-nil-p value)
+            :return value)))
 
 (defun handle-line-if-matching-event (line prefix argc handler)
   "If LINE starts with PREFIX, split the remainder of the line into ARGC strings with commas and apply them to HANDLER.
@@ -56,28 +58,40 @@ Return whether or not LINE started with PREFIX, and also the result of HANDLER i
               (apply handler
                      (nconc sequences (list (subseq data-string index))))))))
 
-(defun handle-events (&rest handlers)
-  "Listen for events from Hyprland, and apply the arguments of the events to the HANDLER with the matching KEY in HANDLERS."
-  (let* (active-window-data
-         (handler-table (loop :for (key handler) :on handlers :by #'cddr
-                              :when (eq key :active-window)
-                                :nconc `(("activewindow>>"
-                                          2
-                                          ,(lambda (&rest args)
-                                             (setf active-window-data args)))
-                                         ("activewindowv2>>"
-                                          1
-                                          ,(lambda (&rest args)
-                                             (apply handler
-                                                    (append active-window-data
-                                                            args)))))
-                              :else
-                                :collect (destructuring-bind (prefix argc)
-                                             (cdr (assoc key *events-spec*))
-                                           (list (concatenate 'string prefix ">>")
-                                                 argc
-                                                 handler)))))
+(defun handle-events (&rest handlers &key return-on-non-nil-p &allow-other-keys)
+  "Listen for events from Hyprland, and apply the arguments of the events to the HANDLER with the matching KEY in HANDLERS.
+
+Pass RETURN-ON-NON-NIL-P to HANDLE-EVENTS-RAW."
+  (let ((handler-table (loop :with active-window-data
+                             :with added-active-window-listener-p
+                             :with event-spec
+                             :for (key handler) :on handlers :by #'cddr
+                             :when (eq key :active-window)
+                               :collect (list "activewindowv2>>"
+                                              1
+                                              (let ((handler handler))
+                                                (lambda (&rest args)
+                                                  (apply handler
+                                                         (append active-window-data
+                                                                 args)))))
+                               :and :unless added-active-window-listener-p
+                                      :collect (list "activewindow>>"
+                                                     2
+                                                     (lambda (&rest args)
+                                                       (setf active-window-data args)
+                                                       NIL))
+                                      :and :do (setf added-active-window-listener-p T)
+                             :end
+                             :else :when (setf event-spec (assoc key *events-spec*))
+                                     :collect (destructuring-bind (prefix argc)
+                                                  (cdr event-spec)
+                                                (list (concatenate 'string prefix ">>")
+                                                      argc
+                                                      handler)))))
     (handle-events-raw (lambda (line)
                          (dolist (handler-spec handler-table)
-                           (when (apply #'handle-line-if-matching-event line handler-spec)
-                             (return)))))))
+                           (multiple-value-bind (matchp value)
+                               (apply #'handle-line-if-matching-event line handler-spec)
+                             (when matchp
+                               (return value)))))
+                       :return-on-non-nil-p return-on-non-nil-p)))
