@@ -7,7 +7,7 @@
   :homepage "https://github.com/eriedaberrie/cl-hyprland-ipc"
   :pathname #P"src/"
   :components ((:file "package")
-               (:file "util" :depends-on ("package"))
-               (:file "hyprctl" :depends-on ("util"))
-               (:file "events" :depends-on ("util")))
+               (:file "sockets" :depends-on ("package"))
+               (:file "hyprctl" :depends-on ("sockets"))
+               (:file "events" :depends-on ("sockets")))
   :depends-on (#:alexandria #:babel #:com.inuoe.jzon #:sb-bsd-sockets #:split-sequence))
