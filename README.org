@@ -40,7 +40,7 @@ the ~activewindow~ and ~activewindowv2~ events.
                                                     (format T
                                                             "Your ~A is: damn ~A.~%"
                                                             (gethash "class"
-                                                                     (hyprland-ipc:get-client-data window-address))
+                                                                     (hyprland-ipc:find-client-data window-address))
                                                             (if (string= floating "1")
                                                                 "Floating"
                                                                 "Not Floating")))
