@@ -9,22 +9,23 @@
   (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
     (sb-bsd-sockets:socket-send hyprctl-socket request NIL)
     (babel:octets-to-string
-     (let ((full-buffer (make-array 0
-                                    :element-type '(unsigned-byte 8)
-                                    :fill-pointer 0
-                                    :adjustable T))
-           (response-buffer (make-array 8192 :element-type '(unsigned-byte 8))))
-       (loop :for response-length := (nth-value 1
-                                                (sb-bsd-sockets:socket-receive
-                                                 hyprctl-socket
-                                                 response-buffer
-                                                 NIL))
-             :do (dotimes (i response-length)
-                   (vector-push-extend (aref response-buffer i)
-                                       full-buffer
-                                       response-length))
-             :while (= response-length (length response-buffer)))
-       full-buffer))))
+     (loop :with full-buffer := (make-array 0
+                                            :element-type '(unsigned-byte 8)
+                                            :fill-pointer 0
+                                            :adjustable T)
+           :with response-buffer := (make-array 8192
+                                                :element-type '(unsigned-byte 8))
+           :for response-length := (nth-value 1
+                                              (sb-bsd-sockets:socket-receive
+                                               hyprctl-socket
+                                               response-buffer
+                                               NIL))
+           :do (dotimes (i response-length)
+                 (vector-push-extend (aref response-buffer i)
+                                     full-buffer
+                                     response-length))
+           :when (/= response-length (length response-buffer))
+             :return full-buffer))))
 
 (defun hyprctl (request &optional jsonp)
   "Send REQUEST to hyprctl and return the response, or the parsed object if JSONP is non-NIL."
