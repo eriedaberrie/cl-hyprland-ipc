@@ -51,9 +51,9 @@ Return whether or not LINE started with PREFIX, and also the result of HANDLER i
                                                         line
                                                         :return-suffix T)))
     (multiple-value-bind (sequences index)
-        (split-sequence:split-sequence #\,
-                                       data-string
-                                       :count (1- argc))
+        (split-sequence #\,
+                        data-string
+                        :count (1- argc))
       (values T
               (apply handler
                      (nconc sequences (list (subseq data-string index))))))))

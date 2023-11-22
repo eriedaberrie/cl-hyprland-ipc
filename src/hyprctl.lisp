@@ -34,7 +34,7 @@
 
 (defun hyprctl (request &optional jsonp)
   "Send REQUEST to hyprctl and return the response, or the parsed object if JSONP is non-NIL."
-  (funcall (if jsonp #'com.inuoe.jzon:parse #'identity)
+  (funcall (if jsonp #'jzon:parse #'identity)
            (%hyprctl (concatenate 'string (if jsonp "j/" "/") request))))
 
 (defun hyprctl-batch (requests)
