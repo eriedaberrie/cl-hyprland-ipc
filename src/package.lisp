@@ -1,5 +1,6 @@
 (uiop:define-package #:hyprland-ipc
-  (:use #:cl #:alexandria)
+  (:use #:cl #:alexandria #:split-sequence)
+  (:local-nicknames (#:jzon #:com.inuoe.jzon))
   (:export
 
    #:*hyprctl-socket*
