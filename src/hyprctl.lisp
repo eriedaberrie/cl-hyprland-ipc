@@ -1,31 +1,36 @@
 (in-package #:hyprland-ipc)
 
-(defun ensure-trimmed-hex-address (address)
-  "Remove the prefixed \"0x\" from ADDRESS if it exists."
-  (or (nth-value 1 (starts-with-subseq "0x" address :return-suffix T))
-      address))
+(defvar *hyprctl-retry-send-count* 3
+  "The number of times hyprctl commands should retry sending to the socket.")
 
 (defun %hyprctl (request)
-  (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
-    (sb-bsd-sockets:socket-send hyprctl-socket request NIL)
-    (babel:octets-to-string
-     (loop :with full-buffer := (make-array 0
-                                            :element-type '(unsigned-byte 8)
-                                            :fill-pointer 0
-                                            :adjustable T)
-           :with response-buffer := (make-array 8192
-                                                :element-type '(unsigned-byte 8))
-           :for response-length := (nth-value 1
-                                              (sb-bsd-sockets:socket-receive
-                                               hyprctl-socket
-                                               response-buffer
-                                               NIL))
-           :do (dotimes (i response-length)
-                 (vector-push-extend (aref response-buffer i)
-                                     full-buffer
-                                     response-length))
-           :when (/= response-length (length response-buffer))
-             :return full-buffer))))
+  (prog ((tries-left *hyprctl-retry-send-count*))
+   :start
+     (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
+       (handler-case
+           (sb-bsd-sockets:socket-send hyprctl-socket request NIL)
+         (sb-bsd-sockets:socket-error (e)
+           (if (>= (decf tries-left) 0)
+               (go :start)
+               (error e))))
+       (return
+         (loop :with full-buffer := (make-array 0
+                                                :element-type '(unsigned-byte 8)
+                                                :fill-pointer 0
+                                                :adjustable T)
+               :with response-buffer := (make-array 8192
+                                                    :element-type '(unsigned-byte 8))
+               :for response-length := (nth-value 1
+                                                  (sb-bsd-sockets:socket-receive
+                                                   hyprctl-socket
+                                                   response-buffer
+                                                   NIL))
+               :do (dotimes (i response-length)
+                     (vector-push-extend (aref response-buffer i)
+                                         full-buffer
+                                         response-length))
+               :when (< response-length (length response-buffer))
+                 :return (babel:octets-to-string full-buffer))))))
 
 (defun hyprctl (request &optional jsonp)
   "Send REQUEST to hyprctl and return the response, or the parsed object if JSONP is non-NIL."
@@ -43,6 +48,11 @@ Return the response, which is probably not very useful."
                           (predicate (lambda (data)
                                        (= id (gethash "id" data)))))
   (find-if predicate (or existing-data (hyprctl default-getter T))))
+
+(defun ensure-trimmed-hex-address (address)
+  "Remove the prefixed \"0x\" from ADDRESS if it exists."
+  (or (nth-value 1 (starts-with-subseq "0x" address :return-suffix T))
+      address))
 
 (defun find-client-data (address &optional clients-data)
   "Return the data of the client at ADDRESS.

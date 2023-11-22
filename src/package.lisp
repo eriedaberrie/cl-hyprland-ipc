@@ -6,6 +6,7 @@
    #:*events-socket*
 
    ;; Hyprctl
+   #:*hyprctl-retry-send-count*
    #:hyprctl
    #:hyprctl-batch
    #:find-client-data
