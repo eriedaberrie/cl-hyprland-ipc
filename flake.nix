@@ -11,25 +11,14 @@
       "x86_64-linux"
     ];
     pkgsFor = system:
-      import nixpkgs {
-        inherit system;
-        overlays = [self.overlays.default];
-      };
+      import nixpkgs {inherit system;};
   in {
-    overlays.default = _: prev: {
-      sbcl = prev.sbcl.withOverrides (_: prev': {
-        cl-hyprland-ipc = prev.sbcl.buildASDFSystem {
-          pname = "cl-hyprland-ipc";
-          version = "0.1.0";
-          src = lib.cleanSource ./.;
-          lispLibs = with prev'; [alexandria babel jzon split-sequence];
-        };
-      });
-    };
-
-    packages = forSystems (system: rec {
-      inherit (pkgsFor system) sbcl;
-      inherit (sbcl.pkgs) cl-hyprland-ipc;
+    packages = forSystems (system: let
+      pkgs = pkgsFor system;
+    in rec {
+      cl-hyprland-ipc = pkgs.callPackage ./nix {
+        lispImpl = pkgs.sbcl;
+      };
       default = cl-hyprland-ipc;
     });
 
@@ -39,7 +28,9 @@
       in {
         default = pkgs.mkShell {
           name = "cl-hyprland-ipc-shell";
-          nativeBuildInputs = [(pkgs.sbcl.withPackages (ps: ps.cl-hyprland-ipc.lispLibs))];
+          nativeBuildInputs = [
+            (pkgs.sbcl.withPackages (_: self.packages.${system}.cl-hyprland-ipc.lispLibs))
+          ];
         };
       }
     );

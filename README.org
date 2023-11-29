@@ -69,17 +69,19 @@ This system is available on [[https://ultralisp.org][Ultralisp]].  With [[https:
 
 ** Nix
 
-The primary way to use this repository's Nix flake is the overlay.  In any flake
-where you might want to use it:
+For Nix users, this repository provides a package through a flake.  In any flake
+that wants to make use of this package, add:
 
 #+BEGIN_SRC nix
-inputs.cl-hyprland-ipc.url = "github:eriedaberrie/cl-hyprland-ipc";
+inputs.cl-hyprland-ipc = {
+  url = "github:eriedaberrie/cl-hyprland-ipc";
+  inputs.nixpkgs.follows = "nixpkgs"; # Advisable to prevent SBCL version mismatches
+};
 #+END_SRC nix
 
-Next, make sure to apply ~inputs.cl-hyprland-ipc.overlays.default~ to ~nixpkgs~,
-either by adding it to the ~nixpkgs.overlays~ option in a NixOS configuration, or
-adding it to the ~overlays~ attribute when importing ~nixpkgs~ in a regular flake.
-This makes ~cl-hyprland-ipc~ accessible in ~pkgs.sbcl.pkgs~, as an argument to
-~pkgs.sbcl.withPackages~ and the ~lispLibs~ attribute of ~pkgs.sbcl.buildASDFSystem~,
-etc.  [[https://nixos.org/manual/nixpkgs/stable/#lisp][The Nixpkgs manual on Common Lisp in Nix.]]
-
+The flake provides the ~cl-hyprland-ipc~ package, for use in
+~pkgs.sbcl.withPackages~, the ~lispLibs~ attribute of ~pkgs.sbcl.buildASDFSystem~,
+etc.  It may be desirable to use something other than the latest ~sbcl~, in which
+case the package's ~lispImpl~ argument can be overridden (keep in mind that
+setting this to anything other than a version of SBCL is most likely not going
+to work).  [[https://nixos.org/manual/nixpkgs/stable/#lisp][The Nixpkgs manual on Common Lisp in Nix.]]
