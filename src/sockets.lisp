@@ -1,7 +1,7 @@
 (in-package #:hyprland-ipc)
 
-(defvar *hyprctl-socket* NIL)
-(defvar *events-socket* NIL)
+(defvar *hyprctl-socket* nil)
+(defvar *events-socket* nil)
 
 (defun init-socket-locations ()
   (when-let (signature (uiop:getenv "HYPRLAND_INSTANCE_SIGNATURE"))
