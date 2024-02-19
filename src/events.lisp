@@ -2,7 +2,7 @@
 
 (defvar *events-spec* '((:workspace "workspace" 1)
                         (:focused-monitor "focusedmon" 2)
-                        (:active-window NIL 3)
+                        (:active-window nil 3)
                         (:fullscreen "fullscreen" 1)
                         (:monitor-removed "monitorremoved" 1)
                         (:monitor-added "monitoradded" 1)
@@ -35,7 +35,7 @@ In order: identifier for use in HANDLE-EVENTS, string prefix received from the s
 HANDLER should have a single argument, which is the line that was received from the socket. If RETURN-ON-NON-NIL-P is non-NIL, stop at and return the first non-NIL result."
   (with-local-stream-socket (events-socket *events-socket*)
     (loop :with events-stream := (sb-bsd-sockets:socket-make-stream events-socket
-                                                                    :input T)
+                                                                    :input t)
           :for line := (read-line events-stream)
           :while line
           :for value := (funcall handler line)
@@ -49,12 +49,12 @@ Return whether or not LINE started with PREFIX, and also the result of HANDLER i
   (when-let (data-string (nth-value 1
                                     (starts-with-subseq prefix
                                                         line
-                                                        :return-suffix T)))
+                                                        :return-suffix t)))
     (multiple-value-bind (sequences index)
         (split-sequence #\,
                         data-string
                         :count (1- argc))
-      (values T
+      (values t
               (apply handler
                      (nconc sequences (list (subseq data-string index))))))))
 
@@ -79,8 +79,8 @@ Pass RETURN-ON-NON-NIL-P to HANDLE-EVENTS-RAW."
                                                      2
                                                      (lambda (&rest args)
                                                        (setf active-window-data args)
-                                                       NIL))
-                                      :and :do (setf added-active-window-listener-p T)
+                                                       nil))
+                                      :and :do (setf added-active-window-listener-p t)
                              :end
                              :else :when (setf event-spec (assoc key *events-spec*))
                                      :collect (destructuring-bind (prefix argc)

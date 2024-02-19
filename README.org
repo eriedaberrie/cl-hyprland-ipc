@@ -14,7 +14,7 @@ A simple wrapper for interacting with Hyprland's IPC using Common Lisp.
 ** Get the title of the active window
 
 #+BEGIN_SRC lisp
-(gethash "title" (hyprland-ipc:hyprctl "activewindow" T))   ; -> "*sly-mrepl for sbcl*"
+(gethash "title" (hyprland-ipc:hyprctl "activewindow" t))   ; -> "*sly-mrepl for sbcl*"
 #+END_SRC lisp
 
 ** Do a bunch of stuff at once
@@ -37,7 +37,7 @@ the ~activewindow~ and ~activewindowv2~ events.
                                           (hyprland-ipc:hyprctl "dispatch exec kitty"))
                             :change-floating-mode (lambda (window-address floating)
                                                     (declare (ignorable window-address floating))
-                                                    (format T
+                                                    (format t
                                                             "Your ~A is: damn ~A.~%"
                                                             (gethash "class"
                                                                      (hyprland-ipc:find-client-data window-address))
@@ -46,7 +46,7 @@ the ~activewindow~ and ~activewindowv2~ events.
                                                                 "Not Floating")))
                             :active-window (lambda (window-class window-title window-address)
                                              (declare (ignorable window-class window-title window-address))
-                                             (format T
+                                             (format t
                                                      "Window with title \"~A\" just focused at 0x~A.~%"
                                                      window-title
                                                      window-address)))
@@ -63,7 +63,7 @@ PR).
 This system is available on [[https://ultralisp.org][Ultralisp]].  With [[https://www.quicklisp.org/beta/][Quicklisp]] installed, run:
 
 #+BEGIN_SRC lisp
-(ql-dist:install-dist "http://dist.ultralisp.org/" :prompt NIL)
+(ql-dist:install-dist "http://dist.ultralisp.org/" :prompt nil)
 (ql:quickload "cl-hyprland-ipc")
 #+END_SRC lisp
 
