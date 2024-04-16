@@ -7,15 +7,13 @@
     ...
   }: let
     inherit (nixpkgs) lib;
-    forSystems = lib.genAttrs [
-      "x86_64-linux"
-    ];
-    pkgsFor = system:
-      import nixpkgs {inherit system;};
+    forSystems = f:
+      lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+      ] (system: f nixpkgs.legacyPackages.${system});
   in {
-    packages = forSystems (system: let
-      pkgs = pkgsFor system;
-    in rec {
+    packages = forSystems (pkgs: rec {
       cl-hyprland-ipc = pkgs.callPackage ./nix {
         lispImpl = pkgs.sbcl;
       };
@@ -23,18 +21,16 @@
     });
 
     devShells = forSystems (
-      system: let
-        pkgs = pkgsFor system;
-      in {
+      pkgs: {
         default = pkgs.mkShell {
           name = "cl-hyprland-ipc-shell";
           nativeBuildInputs = [
-            (pkgs.sbcl.withPackages (_: self.packages.${system}.cl-hyprland-ipc.lispLibs))
+            (pkgs.sbcl.withPackages (lib.const self.packages.${pkgs.system}.cl-hyprland-ipc.lispLibs))
           ];
         };
       }
     );
 
-    formatter = forSystems (system: (pkgsFor system).alejandra);
+    formatter = forSystems (pkgs: pkgs.alejandra);
   };
 }
