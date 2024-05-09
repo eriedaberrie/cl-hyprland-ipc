@@ -1,22 +1,29 @@
 {
-  inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    systems.url = "github:nix-systems/default-linux";
+  };
 
   outputs = {
     self,
     nixpkgs,
+    systems,
     ...
   }: let
     inherit (nixpkgs) lib;
     forSystems = f:
-      lib.genAttrs [
-        "x86_64-linux"
-        "aarch64-linux"
-      ] (system: f nixpkgs.legacyPackages.${system});
+      lib.genAttrs (import systems) (system: f nixpkgs.legacyPackages.${system});
   in {
-    packages = forSystems (pkgs: rec {
-      cl-hyprland-ipc = pkgs.callPackage ./nix {
-        lispImpl = pkgs.sbcl;
+    overlays = {
+      default = _: prev: {
+        cl-hyprland-ipc = prev.callPackage ./nix {
+          lispImpl = prev.sbcl;
+        };
       };
+    };
+
+    packages = forSystems (pkgs: rec {
+      inherit (pkgs.extend self.overlays.default) cl-hyprland-ipc;
       default = cl-hyprland-ipc;
     });
 
