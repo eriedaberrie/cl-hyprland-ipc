@@ -23,7 +23,7 @@
     };
 
     packages = forSystems (pkgs: rec {
-      inherit (pkgs.extend self.overlays.default) cl-hyprland-ipc;
+      inherit (self.overlays.default pkgs pkgs) cl-hyprland-ipc;
       default = cl-hyprland-ipc;
     });
 
