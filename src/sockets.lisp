@@ -5,8 +5,7 @@
 
 (defun init-socket-locations ()
   (when-let ((signature (uiop:getenv "HYPRLAND_INSTANCE_SIGNATURE")))
-    (let ((hypr-directory (make-pathname :directory (append (pathname-directory (uiop:xdg-runtime-dir))
-                                                            (list "hypr" signature)))))
+    (let ((hypr-directory (uiop:xdg-runtime-dir "hypr" signature)))
       (setf *hyprctl-socket* (namestring (merge-pathnames ".socket.sock" hypr-directory)))
       (setf *events-socket* (namestring (merge-pathnames ".socket2.sock" hypr-directory))))))
 
