@@ -1,36 +1,25 @@
 (in-package #:hyprland-ipc)
 
-(defvar *hyprctl-retry-send-count* 3
-  "The number of times hyprctl commands should retry sending to the socket.")
-
 (defun %hyprctl (request)
-  (prog ((tries-left *hyprctl-retry-send-count*))
-   :start
-     (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
-       (handler-case
-           (sb-bsd-sockets:socket-send hyprctl-socket request nil)
-         (sb-bsd-sockets:socket-error (e)
-           (if (minusp (decf tries-left))
-               (error e)
-               (go :start))))
-       (return
-         (loop :with full-buffer := (make-array 0
-                                                :element-type '(unsigned-byte 8)
-                                                :fill-pointer 0
-                                                :adjustable t)
-               :with response-buffer := (make-array 8192
-                                                    :element-type '(unsigned-byte 8))
-               :for response-length := (nth-value 1
-                                                  (sb-bsd-sockets:socket-receive
-                                                   hyprctl-socket
-                                                   response-buffer
-                                                   nil))
-               :do (dotimes (i response-length)
-                     (vector-push-extend (aref response-buffer i)
-                                         full-buffer
-                                         response-length))
-               :when (< response-length (length response-buffer))
-                 :return (babel:octets-to-string full-buffer))))))
+  (with-local-stream-socket (hyprctl-socket *hyprctl-socket*)
+    (sb-bsd-sockets:socket-send hyprctl-socket request nil)
+    (loop :with full-buffer := (make-array 0
+                                           :element-type '(unsigned-byte 8)
+                                           :fill-pointer 0
+                                           :adjustable t)
+          :with response-buffer := (make-array 8192
+                                               :element-type '(unsigned-byte 8))
+          :for response-length := (nth-value 1
+                                             (sb-bsd-sockets:socket-receive
+                                              hyprctl-socket
+                                              response-buffer
+                                              nil))
+          :do (dotimes (i response-length)
+                (vector-push-extend (aref response-buffer i)
+                                    full-buffer
+                                    response-length))
+          :when (< response-length (length response-buffer))
+            :return (babel:octets-to-string full-buffer))))
 
 (defun hyprctl (request &optional jsonp)
   "Send REQUEST to hyprctl and return the response, or the parsed object if JSONP is non-NIL."
