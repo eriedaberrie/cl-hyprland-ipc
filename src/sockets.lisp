@@ -5,9 +5,11 @@
 
 (defun init-socket-locations ()
   (when-let ((signature (uiop:getenv "HYPRLAND_INSTANCE_SIGNATURE")))
-    (let ((hypr-directory (uiop:xdg-runtime-dir "hypr" signature)))
-      (setf *hyprctl-socket* (namestring (merge-pathnames ".socket.sock" hypr-directory)))
-      (setf *events-socket* (namestring (merge-pathnames ".socket2.sock" hypr-directory))))))
+    (macrolet ((hypr-socket-for (var file)
+                 `(setf ,var
+                        (namestring (uiop:xdg-runtime-dir "hypr" signature ,file)))))
+      (hypr-socket-for *hyprctl-socket* ".socket.sock")
+      (hypr-socket-for *events-socket* ".socket2.sock"))))
 
 (uiop:register-image-restore-hook #'init-socket-locations
                                   (not (and *hyprctl-socket* *events-socket*)))
