@@ -30,7 +30,7 @@
   "Pass every request in REQUESTS to hyrpctl in a batch, which is more efficient than if done individually.
 
 Return the response, which is probably not very useful."
-  (%hyprctl (format nil "[[BATCH]]~{~A~^;~}" (ensure-list requests))))
+  (%hyprctl (format nil "[[BATCH]]~{~A~^;~}" (a:ensure-list requests))))
 
 (defun find-data-by-id (id default-getter existing-data
                         &optional
@@ -40,7 +40,7 @@ Return the response, which is probably not very useful."
 
 (defun ensure-trimmed-hex-address (address)
   "Remove the prefixed \"0x\" from ADDRESS if it exists."
-  (or (nth-value 1 (starts-with-subseq "0x" address :return-suffix t))
+  (or (nth-value 1 (a:starts-with-subseq "0x" address :return-suffix t))
       address))
 
 (defun find-client-data (address &optional clients-data)

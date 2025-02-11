@@ -46,14 +46,14 @@ HANDLER should have a single argument, which is the line that was received from 
   "If LINE starts with PREFIX, split the remainder of the line into ARGC strings with commas and apply them to HANDLER.
 
 Return whether or not LINE started with PREFIX, and also the result of HANDLER if it was called."
-  (when-let (data-string (nth-value 1
-                                    (starts-with-subseq prefix
-                                                        line
-                                                        :return-suffix t)))
+  (a:when-let (data-string (nth-value 1
+                                      (a:starts-with-subseq prefix
+                                                            line
+                                                            :return-suffix t)))
     (multiple-value-bind (sequences index)
-        (split-sequence #\,
-                        data-string
-                        :count (1- argc))
+        (split-sequence:split-sequence #\,
+                                       data-string
+                                       :count (1- argc))
       (values t
               (apply handler
                      (nconc sequences (list (subseq data-string index))))))))
