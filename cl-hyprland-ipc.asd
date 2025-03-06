@@ -10,4 +10,9 @@
                (:file "sockets" :depends-on ("package"))
                (:file "hyprctl" :depends-on ("package" "sockets"))
                (:file "events" :depends-on ("package" "sockets")))
-  :depends-on (#:alexandria #:babel #:com.inuoe.jzon #:sb-bsd-sockets #:split-sequence))
+  :depends-on (#:alexandria
+               #:babel
+               #:com.inuoe.jzon
+               #:sb-bsd-sockets
+               #:split-sequence
+               #:uiop))
