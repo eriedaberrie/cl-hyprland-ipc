@@ -29,9 +29,9 @@
 
     devShells = forSystems (
       pkgs: {
-        default = pkgs.mkShell {
+        default = pkgs.mkShellNoCC {
           name = "cl-hyprland-ipc-shell";
-          nativeBuildInputs = [
+          packages = [
             (pkgs.sbcl.withPackages (lib.const self.packages.${pkgs.system}.cl-hyprland-ipc.lispLibs))
           ];
         };
