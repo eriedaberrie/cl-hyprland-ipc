@@ -1,8 +1,8 @@
-(asdf:defsystem cl-hyprland-ipc
+(asdf:defsystem "cl-hyprland-ipc"
   :version "0.1.0"
   :author "eriedaberrie <eriedaberrie@gmail.com>"
   :maintainer "eriedaberrie <eriedaberrie@gmail.com>"
-  :license "gpl3"
+  :license "GPLv3-or-later"
   :description "Common Lisp bindings for Hyprland IPC"
   :homepage "https://github.com/eriedaberrie/cl-hyprland-ipc"
   :pathname #P"src/"
