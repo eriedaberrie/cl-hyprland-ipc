@@ -85,3 +85,7 @@ etc.  It may be desirable to use something other than the latest ~sbcl~, in whic
 case the package's ~lispImpl~ argument can be overridden (keep in mind that
 setting this to anything other than a version of SBCL is most likely not going
 to work).  [[https://nixos.org/manual/nixpkgs/stable/#lisp][The Nixpkgs manual on Common Lisp in Nix.]]
+
+* Todo
++ Completely rewrite the entire listening API
++ Switch to ~usocket~
